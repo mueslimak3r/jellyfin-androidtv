@@ -33,7 +33,7 @@ import org.jellyfin.androidtv.ui.presentation.CardPresenter;
 import org.jellyfin.androidtv.util.DeviceUtils;
 import org.jellyfin.androidtv.util.Utils;
 import org.jellyfin.androidtv.util.apiclient.ReportingHelper;
-import org.jellyfin.androidtv.util.profile.ExoPlayerProfile;
+import org.jellyfin.androidtv.util.profile.ExoPlayerEnhancedProfile;
 import org.jellyfin.androidtv.util.profile.LibVlcProfile;
 import org.jellyfin.apiclient.interaction.ApiClient;
 import org.jellyfin.apiclient.interaction.Response;
@@ -667,7 +667,7 @@ public class MediaManager {
         options.setMediaSources(item.getMediaSources());
         DeviceProfile profile;
         if (DeviceUtils.is60()) {
-            profile = new ExoPlayerProfile();
+            profile = new ExoPlayerEnhancedProfile();
         } else {
             profile = new LibVlcProfile();
         }

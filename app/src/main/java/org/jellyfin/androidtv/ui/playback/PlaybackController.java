@@ -35,6 +35,7 @@ import org.jellyfin.androidtv.util.apiclient.ReportingHelper;
 import org.jellyfin.androidtv.util.apiclient.StreamHelper;
 import org.jellyfin.androidtv.util.profile.BaseProfile;
 import org.jellyfin.androidtv.util.profile.ExoPlayerProfile;
+import org.jellyfin.androidtv.util.profile.ExoPlayerEnhancedProfile;
 import org.jellyfin.androidtv.util.profile.LibVlcProfile;
 import org.jellyfin.androidtv.util.profile.ProfileHelper;
 import org.jellyfin.apiclient.interaction.ApiClient;
@@ -511,7 +512,7 @@ public class PlaybackController {
                 internalOptions.setMediaSourceId(transcodedSubtitle >= 0 ? getCurrentMediaSource().getId() : null);
                 DeviceProfile internalProfile = new BaseProfile();
                 if (DeviceUtils.is60() || userPreferences.getValue().get(UserPreferences.Companion.getAc3Enabled())) {
-                    internalProfile = new ExoPlayerProfile(
+                    internalProfile = new ExoPlayerEnhancedProfile(
                             isLiveTv,
                             userPreferences.getValue().get(UserPreferences.Companion.getLiveTvDirectPlayEnabled())
                     );
@@ -519,7 +520,8 @@ public class PlaybackController {
                     Timber.i("*** Using extended Exoplayer profile options");
 
                 } else {
-                    Timber.i("*** Using default android profile");
+                    internalProfile = new ExoPlayerProfile();
+                    Timber.i("*** Using default exoplayer profile");
                 }
                 internalOptions.setProfile(internalProfile);
 
@@ -656,10 +658,15 @@ public class PlaybackController {
                                 // requested specific audio stream that is different from default so we need to force a transcode to get it (ExoMedia currently cannot switch)
                                 // remove direct play profiles to force the transcode
                                 final DeviceProfile save = internalOptions.getProfile();
-                                DeviceProfile newProfile = new ExoPlayerProfile(
-                                        isLiveTv,
-                                        userPreferences.getValue().get(UserPreferences.Companion.getLiveTvDirectPlayEnabled())
-                                );
+                                DeviceProfile newProfile;
+                                if (DeviceUtils.is60()) {
+                                    newProfile = new ExoPlayerEnhancedProfile(
+                                            isLiveTv,
+                                            userPreferences.getValue().get(UserPreferences.Companion.getLiveTvDirectPlayEnabled())
+                                    );
+                                } else {
+                                    newProfile = new ExoPlayerProfile();
+                                }
                                 if (!Utils.downMixAudio())
                                     ProfileHelper.addAc3Streaming(newProfile, true);
                                 newProfile.setDirectPlayProfiles(new DirectPlayProfile[]{});
