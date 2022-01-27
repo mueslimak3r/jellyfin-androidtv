@@ -97,6 +97,8 @@ public class PlaybackController {
 
     private long mStartPosition = 0;
 
+    private boolean isSkipping = false;
+
     // tmp position used when seeking
     private long mSeekPosition = -1;
     private long mCurrentProgramEndTime;
@@ -1112,6 +1114,7 @@ public class PlaybackController {
         seek(currentSkipPos);
         currentSkipPos = 0;
         updateProgress = true; // re-enable true progress updates
+        isSkipping = false;
     };
 
     public void skip(int msec) {
@@ -1133,6 +1136,7 @@ public class PlaybackController {
             Timber.d("Duration reported as: %s current pos: %s", mVideoManager.getDuration(), mCurrentPosition);
 
             mSeekPosition = currentSkipPos;
+            isSkipping = true;
             if (mFragment != null) mFragment.setCurrentTime(currentSkipPos);
             mHandler.postDelayed(skipRunnable, 800);
         }
@@ -1426,6 +1430,10 @@ public class PlaybackController {
     public long getCurrentPosition() {
         // if not playing and seeking, mCurrentPosition may not be current
         return !isPlaying() && mSeekPosition != -1 ? mSeekPosition : mCurrentPosition;
+    }
+
+    public boolean getIsSkipping() {
+        return isSkipping;
     }
 
     public boolean isPaused() {

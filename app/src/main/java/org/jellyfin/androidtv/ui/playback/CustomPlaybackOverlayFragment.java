@@ -560,14 +560,26 @@ public class CustomPlaybackOverlayFragment extends Fragment implements IPlayback
                         }
                     }
 
-                    if (!mIsVisible) {
+                    if (!mPlaybackController.isLiveTv() && mPlaybackController.getIsSkipping()) {
+                        if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+                            mPlaybackController.fastForward();
+                            return true;
+                        }
+
+                        if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
+                            mPlaybackController.rewind();
+                            return true;
+                        }
+                    } else if (!mIsVisible) {
                         if (!mPlaybackController.isLiveTv()) {
                             if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+                                mPlaybackController.fastForward();
                                 setFadingEnabled(true);
                                 return true;
                             }
 
                             if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
+                                mPlaybackController.rewind();
                                 setFadingEnabled(true);
                                 return true;
                             }
