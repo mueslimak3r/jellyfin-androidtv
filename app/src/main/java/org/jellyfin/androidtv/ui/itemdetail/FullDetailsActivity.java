@@ -1448,7 +1448,7 @@ public class FullDetailsActivity extends BaseActivity implements IRecordingIndic
                         @Override
                         public void onResponse(List<BaseItemDto> response) {
                             if (mBaseItem.getBaseItemType() == BaseItemType.MusicArtist) {
-                                mediaManager.getValue().playNow(response);
+                                mediaManager.getValue().playNow(response, false);
                             } else {
                                 Intent intent = new Intent(FullDetailsActivity.this, ExternalPlayerActivity.class);
                                 mediaManager.getValue().setCurrentVideoQueue(response);
@@ -1599,7 +1599,6 @@ public class FullDetailsActivity extends BaseActivity implements IRecordingIndic
     }
 
     protected void play(final BaseItemDto item, final int pos, final boolean shuffle) {
-
         PlaybackHelper.getItemsToPlay(item, pos == 0 && item.getBaseItemType() == BaseItemType.Movie, shuffle, new Response<List<BaseItemDto>>() {
             @Override
             public void onResponse(List<BaseItemDto> response) {
@@ -1607,7 +1606,7 @@ public class FullDetailsActivity extends BaseActivity implements IRecordingIndic
                 if (playbackLauncher.interceptPlayRequest(FullDetailsActivity.this, item)) return;
 
                 if (item.getBaseItemType() == BaseItemType.MusicArtist) {
-                    mediaManager.getValue().playNow(response);
+                    mediaManager.getValue().playNow(response, shuffle);
                 } else {
                     Class activity = KoinJavaComponent.<PlaybackLauncher>get(PlaybackLauncher.class).getPlaybackActivityClass(item.getBaseItemType());
                     Intent intent = new Intent(FullDetailsActivity.this, activity);
