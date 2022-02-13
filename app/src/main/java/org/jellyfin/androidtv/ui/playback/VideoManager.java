@@ -25,6 +25,8 @@ import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.TracksInfo;
 import com.google.android.exoplayer2.source.TrackGroup;
+import com.google.android.exoplayer2.source.hls.HlsManifest;
+import com.google.android.exoplayer2.source.hls.playlist.HlsMediaPlaylist;
 import com.google.android.exoplayer2.trackselection.TrackSelectionOverrides;
 import com.google.android.exoplayer2.trackselection.TrackSelectionParameters;
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
@@ -344,12 +346,52 @@ public class VideoManager implements IVLCVout.OnNewVideoLayoutListener {
         return canSeek;
     }
 
+    private long syncToHlsSegment(long pos) {
+        if (mExoPlayer.getCurrentManifest() instanceof HlsManifest) {
+            HlsMediaPlaylist mediaPlaylist = ((HlsManifest) mExoPlayer.getCurrentManifest()).mediaPlaylist;
+
+            Timber.d("HLS MEDIA type %s segment count %s", mediaPlaylist.playlistType == HlsMediaPlaylist.PLAYLIST_TYPE_VOD ? "VOD" : "OTHER", mediaPlaylist.segments.size());
+            List<HlsMediaPlaylist.Segment> segments = mediaPlaylist.segments;
+            for (int i = 0; i < segments.size(); i++) {
+                HlsMediaPlaylist.Segment segment = segments.get(i);
+
+                long segmentStart = segment.relativeStartTimeUs == 0 ? 0 : segment.relativeStartTimeUs / 1000;
+                long segmentDuration = segment.durationUs == 0 ? 0 : segment.durationUs / 1000;
+
+                Timber.d("SEGMENT START %s DURATION %s", segmentStart, segmentDuration);
+
+                /*
+                if (segmentStart == pos && i > 0) {
+                    HlsMediaPlaylist.Segment lastSegment = segments.get(i - 1);
+                    Timber.d("MATCHED SEGMENT BUT RETURNING START OF PREVIOUS SEGMENT");
+                    return lastSegment.relativeStartTimeUs == 0 ? 0 : lastSegment.relativeStartTimeUs / 1000;
+                } else if (pos >= segmentStart && pos < segmentStart + segmentDuration) {
+                    Timber.d("MATCHED SEGMENT AND RETURNING START");
+                    return segmentStart;
+                }
+
+                 */
+                if (pos >= segmentStart && pos < segmentStart + segmentDuration) {
+                    if (i > 0) {
+                        HlsMediaPlaylist.Segment lastSegment = segments.get(i - 1);
+                        Timber.d("MATCHED SEGMENT BUT RETURNING START OF PREVIOUS SEGMENT");
+                        return lastSegment.relativeStartTimeUs == 0 ? 0 : lastSegment.relativeStartTimeUs / 1000;
+                    } else {
+                        Timber.d("MATCHED SEGMENT AND RETURNING START");
+                        return segmentStart;
+                    }
+                }
+            }
+        }
+        return pos;
+    }
+
     public long seekTo(long pos) {
         if (!isInitialized())
             return -1;
         if (nativeMode) {
             Timber.i("Exo length in seek is: %d", getDuration());
-            mExoPlayer.seekTo(pos);
+            mExoPlayer.seekTo(syncToHlsSegment(pos));
             return pos;
         } else {
             if (mVlcPlayer == null || !mVlcPlayer.isSeekable()) return -1;
